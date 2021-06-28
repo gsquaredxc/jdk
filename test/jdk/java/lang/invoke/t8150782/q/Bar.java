@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -20,29 +22,16 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+package q;
 
-/*
- * @test
- * @bug 8260716
- * @summary Test for correct code generation by the JIT
- * @run main/othervm -Xbatch -XX:CompileCommand=compileonly,*ClearArrayTest.test
- *                   -XX:+IgnoreUnrecognizedVMOptions
- *                   -XX:+UnlockDiagnosticVMOptions -XX:-IdealizeClearArrayNode
- *                   compiler.codegen.ClearArrayTest
- */
+import p.Foo;
 
-package compiler.codegen;
+// access protected inner class Foo.T
+public class Bar extends Foo {
+    public static final Class<?> T_CLS = T.class;
+    public static final Class<?> T_ARRAY_CLS = T[].class;
 
-public class ClearArrayTest {
-    static int[] f1;
-
-    private static void test() {
-        f1 = new int[8];
-    }
-
-    public static void main(String[] args) {
-        for (int i=0; i<15000; i++) {
-            test();
-        }
+    public static void meth(T[] arr) {
+        System.out.println("called method");
     }
 }
