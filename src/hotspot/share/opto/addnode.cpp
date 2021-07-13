@@ -321,6 +321,23 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   if( op1 == Op_SubI && phase->type(in1->in(1)) == TypeInt::ZERO )
     return new SubINode( in2, in1->in(2) );
 
+  // Associative
+  if (op1 == Op_MulI && op2 == Op_MulI) {
+    // Convert "a*b+a*c into a *(b+c)
+    if (in1->in(1) == in2->in(1)) {
+      Node* add = phase->transform(new AddINode(in1->in(2), in2->in(2)));
+      return new MulINode(in1->in(1), add);
+    } else if (in1->in(2) == in2->in(1)) {
+      // Convert a*b+b*c into b*(a+c)
+      Node* add = phase->transform(new AddINode(in1->in(1), in2->in(2)));
+      return new MulINode(in1->in(2), add);
+    } else if (in1->in(2) == in2->in(2)) {
+      // Convert a*c+b*c into (a+b)*c
+      Node* add = phase->transform(new AddINode(in1->in(1), in2->in(1)));
+      return new MulINode(in1->in(2), add);
+    }
+  }
+
   // Convert (x>>>z)+y into (x+(y<<z))>>>z for small constant z and y.
   // Helps with array allocation math constant folding
   // See 4790063:
@@ -468,6 +485,23 @@ Node *AddLNode::Ideal(PhaseGVN *phase, bool can_reshape) {
   // Convert "(0-y)+x" into "(x-y)"
   if( op1 == Op_SubL && phase->type(in1->in(1)) == TypeLong::ZERO )
     return new SubLNode( in2, in1->in(2) );
+
+  // Associative
+  if (op1 == Op_MulL && op2 == Op_MulL) {
+    // Convert "a*b+a*c into a *(b+c)
+    if (in1->in(1) == in2->in(1)) {
+      Node* add = phase->transform(new AddLNode(in1->in(2), in2->in(2)));
+      return new MulLNode(in1->in(1), add);
+    } else if (in1->in(2) == in2->in(1)) {
+      // Convert a*b+b*c into b*(a+c)
+      Node* add = phase->transform(new AddLNode(in1->in(1), in2->in(2)));
+      return new MulLNode(in1->in(2), add);
+    } else if (in1->in(2) == in2->in(2)) {
+      // Convert a*c+b*c into (a+b)*c
+      Node* add = phase->transform(new AddLNode(in1->in(1), in2->in(1)));
+      return new MulLNode(in1->in(2), add);
+    }
+  }
 
   // Convert (x >>> rshift) + (x << lshift) into RotateRight(x, rshift)
   if (Matcher::match_rule_supported(Op_RotateRight) &&
